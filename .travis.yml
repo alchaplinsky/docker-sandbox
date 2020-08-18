@@ -1,0 +1,33 @@
+sudo: required
+services:
+  - docker
+
+
+script:
+  - echo Done!
+
+after_success:
+  - docker build -t alchaplinsky/multi-client ./client
+  - docker build -t alchaplinsky/multi-nginx ./nginx
+  - docker build -t alchaplinsky/multi-server ./server
+  - docker build -t alchaplinsky/multi-worker ./worker
+
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID"
+
+  - docker push alchaplinsky/multi-client
+  - docker push alchaplinsky/multi-nginx
+  - docker push alchaplinsky/multi-server
+  - docker push alchaplinsky/multi-worker
+
+deploy:
+  provider: elasticbeanstalk
+  region: us-east-2
+  app: multi-docker
+  env: MultiDocker-env
+  bucket_name: elasticbeanstalk-us-east-2-578332207392
+  bucker_path: docker-multi
+  on:
+    branch: master
+  access_key_id: $AWS_ACCESS_KEY
+  secret_access_key:
+    secure: $AWS_SECRET_KEY
